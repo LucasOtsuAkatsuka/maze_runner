@@ -33,27 +33,27 @@ Position load_maze(const std::string& file_name) {
 
     std::ifstream file(file_name);
     if (!file) {
-        std::cerr << "Erro ao abrir o arquivo!\n";
+        std::cerr << "arquivo nao encontrado\n";
         return {-1, -1};
     }
 
     file >> num_rows >> num_cols;
     maze.resize(num_rows, std::vector<char>(num_cols));
 
-    Position start = {-1, -1};
+    Position inicio = {-1, -1};
 
     for (int i = 0; i < num_rows; i++) {
         for (int j = 0; j < num_cols; j++) {
             file >> maze[i][j];
             if (maze[i][j] == 'e') {
-                start = {i, j};
+                inicio = {i, j};
             }
         }
     }
 
     file.close();
     
-    return start; // Placeholder - substitua pelo valor correto
+    return inicio; // Placeholder - substitua pelo valor correto
 }
 
 // Função para imprimir o labirinto
@@ -86,7 +86,7 @@ bool is_valid_position(int row, int col) {
 }
 
 // Função principal para navegar pelo labirinto
-bool walk(Position pos) {
+bool walk(Position position) {
     // TODO: Implemente a lógica de navegação aqui
     // 1. Marque a posição atual como visitada (maze[pos.row][pos.col] = '.')
     // 2. Chame print_maze() para mostrar o estado atual do labirinto
@@ -103,38 +103,38 @@ bool walk(Position pos) {
     //    c. Se walk retornar true, propague o retorno (retorne true)
     // 7. Se todas as posições foram exploradas sem encontrar a saída, retorne false
 
-    valid_positions.push(pos);
+    valid_positions.push(position);
 
     while (!valid_positions.empty()) {
-        Position current = valid_positions.top();
+        Position atual = valid_positions.top();
         valid_positions.pop();
 
     
-        if (maze[current.row][current.col] == 's') {
+        if (maze[atual.row][atual.col] == 's') {
             return true;
         }
 
         
-        if (maze[current.row][current.col] != 'e')
-            maze[current.row][current.col] = 'o';
+        if (maze[atual.row][atual.col] != 'e')
+            maze[atual.row][atual.col] = 'o';
         print_maze();
 
         
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        if (maze[current.row][current.col] != 'e')
-            maze[current.row][current.col] = '.';
+        if (maze[atual.row][atual.col] != 'e')
+            maze[atual.row][atual.col] = '.';
 
 
-        std::vector<Position> moves = {
-            {current.row - 1, current.col}, 
-            {current.row + 1, current.col}, 
-            {current.row, current.col - 1}, 
-            {current.row, current.col + 1}  
+        std::vector<Position> movimentos = {
+            {atual.row - 1, atual.col}, 
+            {atual.row + 1, atual.col}, 
+            {atual.row, atual.col - 1}, 
+            {atual.row, atual.col + 1}  
         };
 
-        for (const auto& move : moves) {
-            if (is_valid_position(move.row, move.col)) {
-                valid_positions.push(move);
+        for (const auto& movimento : movimentos) {
+            if (is_valid_position(movimento.row, movimento.col)) {
+                valid_positions.push(movimento);
             }
         }
     }
