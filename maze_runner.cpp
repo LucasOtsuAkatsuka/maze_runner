@@ -12,7 +12,6 @@ using Maze = std::vector<std::vector<char>>;
 struct Position {
     int row;
     int col;
-    bool exp;
 };
 
 // Variáveis globais
@@ -22,7 +21,6 @@ int num_cols;
 int total_threads;
 bool exit_found = false;
 std::stack<Position> valid_positions;
-std::vector<Position> movimentos;
 
 // Função para carregar o labirinto de um arquivo
 Position load_maze(const std::string& file_name) {
@@ -107,6 +105,7 @@ void walk(Position position) {
     //    c. Se walk retornar true, propague o retorno (retorne true)
     // 7. Se todas as posições foram exploradas sem encontrar a saída, retorne false
 
+    std::vector<Position> movimentos;
     valid_positions.push(position);
     int caminhos;
 
@@ -134,14 +133,12 @@ void walk(Position position) {
         };
 
         for (const auto& movimento : movimentos) {
-            if (is_valid_position(movimento.row, movimento.col) && caminhos == 0 & movimento.exp == 0) {
+            if (is_valid_position(movimento.row, movimento.col) && caminhos == 0) {
                 valid_positions.push(movimento);
                 caminhos++;
-                movimento.exp == 1;
-            }else if(is_valid_position(movimento.row, movimento.col) && caminhos > 0 && movimento.exp == 0){
+            }else if(is_valid_position(movimento.row, movimento.col) && caminhos > 0){
                 std::thread t(walk,movimento);
                 total_threads++;
-                movimento.exp == 1;
                 t.detach();
             }
         }
@@ -166,9 +163,9 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    walk(initial_pos);
     total_threads = 1;
-
+    walk(initial_pos);
+    
     while (true)
     {
         if (exit_found) {
