@@ -20,8 +20,6 @@ int num_rows;
 int num_cols;
 int total_threads;
 bool exit_found = false;
-int total = 0;
-std::stack<Position> valid_positions;
 
 // Função para carregar o labirinto de um arquivo
 Position load_maze(const std::string& file_name) {
@@ -107,17 +105,18 @@ bool walk(Position position) {
     // 7. Se todas as posições foram exploradas sem encontrar a saída, retorne false
 
     std::vector<Position> movimentos;
-    valid_positions.push(position);
+    Position prox;
+    prox.row = position.row;
+    prox.col = position.col;
     int caminhos;
     int invalido = 0;
 
-    while (!valid_positions.empty() && !exit_found) {
-        Position atual = valid_positions.top();
-        valid_positions.pop();
-        caminhos = 0;
+    while (!exit_found) {
+        Position atual;
+        atual.col = prox.col;
+        atual.row = prox.row;
     
         if (maze[atual.row][atual.col] == 's') {
-            total_threads--;
             exit_found = true;
             return 0;
         }
@@ -137,15 +136,16 @@ bool walk(Position position) {
         };
 
         invalido = 0;
-
+        caminhos = 0;
+        
         for (const auto& movimento : movimentos) {
             if (is_valid_position(movimento.row, movimento.col) && caminhos == 0) {
-                valid_positions.push(movimento);
+                prox.col = movimento.col;
+                prox.row = movimento.row;
                 caminhos++;
             }else if(is_valid_position(movimento.row, movimento.col) && caminhos == 1){
                 std::thread t(walk,movimento);
                 total_threads++;
-                total++;
                 t.detach();
             }else if(!is_valid_position(movimento.row, movimento.col) ){
                 invalido++;
@@ -154,7 +154,7 @@ bool walk(Position position) {
 
         if (invalido >= 4)
         {
-            maze[atual.row][atual.col] = 'a';
+            maze[atual.row][atual.col] = '.';
             total_threads--;
             return 0;
         }
@@ -185,7 +185,7 @@ int main(int argc, char* argv[]) {
     {
         if (exit_found) {
             print_maze();
-            std::cout << total << " " << total_threads << "Saída encontrada!" << std::endl;
+            std::cout << "Saída encontrada!" << std::endl;
             return 0;
         } else if(exit_found == false && total_threads == 0) {
             print_maze();
