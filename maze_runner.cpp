@@ -20,6 +20,7 @@ int num_rows;
 int num_cols;
 int total_threads;
 bool exit_found = false;
+int total = 0;
 std::stack<Position> valid_positions;
 
 // Função para carregar o labirinto de um arquivo
@@ -88,7 +89,7 @@ bool is_valid_position(int row, int col) {
 }
 
 // Função principal para navegar pelo labirinto
-void walk(Position position) {
+bool walk(Position position) {
     // TODO: Implemente a lógica de navegação aqui
     // 1. Marque a posição atual como visitada (maze[pos.row][pos.col] = '.')
     // 2. Chame print_maze() para mostrar o estado atual do labirinto
@@ -108,8 +109,9 @@ void walk(Position position) {
     std::vector<Position> movimentos;
     valid_positions.push(position);
     int caminhos;
+    int invalido = 0;
 
-    while (!valid_positions.empty()) {
+    while (!valid_positions.empty() && !exit_found) {
         Position atual = valid_positions.top();
         valid_positions.pop();
         caminhos = 0;
@@ -117,13 +119,15 @@ void walk(Position position) {
         if (maze[atual.row][atual.col] == 's') {
             total_threads--;
             exit_found = true;
+            return 0;
         }
 
         
         if (maze[atual.row][atual.col] != 'e')
             maze[atual.row][atual.col] = 'o';
         print_maze();
-
+        if (maze[atual.row][atual.col] != 'e')
+            maze[atual.row][atual.col] = '.';
 
         movimentos = {
             {atual.row - 1, atual.col}, 
@@ -132,23 +136,34 @@ void walk(Position position) {
             {atual.row, atual.col + 1}  
         };
 
+        invalido = 0;
+
         for (const auto& movimento : movimentos) {
             if (is_valid_position(movimento.row, movimento.col) && caminhos == 0) {
                 valid_positions.push(movimento);
                 caminhos++;
-            }else if(is_valid_position(movimento.row, movimento.col) && caminhos > 0){
+            }else if(is_valid_position(movimento.row, movimento.col) && caminhos == 1){
                 std::thread t(walk,movimento);
                 total_threads++;
+                total++;
                 t.detach();
+            }else if(!is_valid_position(movimento.row, movimento.col) ){
+                invalido++;
             }
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        if (maze[atual.row][atual.col] != 'e')
-            maze[atual.row][atual.col] = '.';
+        if (invalido >= 4)
+        {
+            maze[atual.row][atual.col] = 'a';
+            total_threads--;
+            return 0;
+        }
         
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     total_threads--;
+    return 0;
 }
 
 int main(int argc, char* argv[]) {
@@ -164,14 +179,16 @@ int main(int argc, char* argv[]) {
     }
 
     total_threads = 1;
-    walk(initial_pos);
-    
+    bool f = walk(initial_pos);
+
     while (true)
     {
         if (exit_found) {
-            std::cout << "Saída encontrada!" << std::endl;
+            print_maze();
+            std::cout << total << " " << total_threads << "Saída encontrada!" << std::endl;
             return 0;
         } else if(exit_found == false && total_threads == 0) {
+            print_maze();
             std::cout << "Não foi possível encontrar a saída." << std::endl;
             return 0;
         }
