@@ -124,10 +124,7 @@ bool walk(Position position) {
         
         if (maze[atual.row][atual.col] != 'e')
             maze[atual.row][atual.col] = 'o';
-        print_maze();
-        if (maze[atual.row][atual.col] != 'e')
-            maze[atual.row][atual.col] = '.';
-
+        
         movimentos = {
             {atual.row - 1, atual.col}, 
             {atual.row + 1, atual.col}, 
@@ -161,6 +158,8 @@ bool walk(Position position) {
         
 
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        if (maze[atual.row][atual.col] != 'e')
+            maze[atual.row][atual.col] = '.';
     }
     total_threads--;
     return 0;
@@ -179,10 +178,12 @@ int main(int argc, char* argv[]) {
     }
 
     total_threads = 1;
-    bool f = walk(initial_pos);
+    std::thread w (walk,initial_pos);
+    w.detach();
 
     while (true)
     {
+        print_maze();
         if (exit_found) {
             print_maze();
             std::cout << "Saída encontrada!" << std::endl;
@@ -193,6 +194,7 @@ int main(int argc, char* argv[]) {
             return 0;
         }
     }
+    
 }
 
 // Nota sobre o uso de std::this_thread::sleep_for:
